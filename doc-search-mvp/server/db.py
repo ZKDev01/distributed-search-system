@@ -1,10 +1,15 @@
 """SQLite helper for Doc Search MVP"""
 
+import os
 import sqlite3
 from contextlib import contextmanager
 from pathlib import Path
 
-DB_PATH = Path(__file__).with_name("doc_search.db")
+# Permitir configurar la ruta de la DB por variable de entorno (útil en Docker)
+_db_from_env = os.getenv("DOCSEARCH_DB_PATH")
+DB_PATH = (
+    Path(_db_from_env) if _db_from_env else Path(__file__).with_name("doc_search.db")
+)
 
 
 @contextmanager

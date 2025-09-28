@@ -1,0 +1,45 @@
+version: "3.9"
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: ./doc-search-mvp/server/Dockerfile
+    image: doc-search-mvp-api:local
+    container_name: doc-search-api
+    ports:
+      - "8000:8000"
+    environment:
+      - DOCSEARCH_DB_PATH=/data/doc_search.db
+    volumes:
+      - docsearch_data:/data
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request,sys; sys.exit(0) if urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=2).getcode()==200 else sys.exit(1)",
+        ]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+
+  ui:
+    build:
+      context: .
+      dockerfile: ./doc-search-mvp/client/Dockerfile
+    image: doc-search-mvp-ui:local
+    container_name: doc-search-ui
+    depends_on:
+      api:
+        condition: service_healthy
+    ports:
+      - "8501:8501"
+    environment:
+      - SERVER_URL=http://api:8000
+
+volumes:
+  docsearch_data:
+    driver: local
